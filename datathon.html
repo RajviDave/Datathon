@@ -3,89 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traffic Occupancy Prediction & Simulation</title>
+    <title>Advanced Traffic Occupancy Prediction & Simulation</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
             margin: 0;
             padding: 20px;
+            color: #333;
         }
         .main-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            gap: 20px;
+            gap: 25px;
+        }
+        .header {
+            width: 100%;
+            text-align: center;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #7f8c8d;
+            max-width: 800px;
+            margin: 0 auto;
         }
         .form-container {
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            transition: transform 0.3s;
+        }
+        .form-container:hover {
+            transform: translateY(-5px);
         }
         .simulation-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 950px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            transition: transform 0.3s;
+        }
+        .simulation-container:hover {
+            transform: translateY(-5px);
         }
         canvas {
             width: 100%;
-            height: 200px;
+            height: 300px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 8px;
+            transition: box-shadow 0.3s;
         }
-        input, button {
+        canvas:hover {
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        .input-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        label {
             display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        input, select {
             width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
             box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
         button {
-            background-color: #28a745;
+            width: 100%;
+            padding: 14px;
+            border-radius: 6px;
+            background-color: #2ecc71;
             color: white;
             border: none;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 20px;
         }
         button:hover {
-            background-color: #218838;
+            background-color: #27ae60;
+        }
+        button:active {
+            transform: scale(0.98);
         }
         .simulation-stats {
             display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
+            justify-content: space-around;
+            margin-top: 25px;
+            gap: 15px;
         }
         .stat-item {
             text-align: center;
             flex: 1;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        .stat-item:hover {
+            transform: translateY(-3px);
+            background: #eef2f7;
+        }
+        .stat-item h4 {
+            margin: 0 0 10px 0;
+            color: #34495e;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .weather-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .weather-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: auto;
+            font-size: 14px;
+        }
+        .weather-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        .time-of-day {
+            margin: 15px 0;
         }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <h1>Traffic Simulation</h1>
+        <div class="header">
+            <h1>Advanced Traffic Simulation</h1>
+            <p>Explore how different factors affect road occupancy with our realistic traffic simulator</p>
+        </div>
         
         <div class="form-container">
             <h2>Occupancy Prediction</h2>
             <form id="predictionForm">
-                <label for="vehicles">Vehicles (Lane 1):</label>
-                <input type="number" id="vehicles" name="vehicles" min="1" max="100" value="20" required>
+                <div class="input-group">
+                    <label for="vehicles">Number of Vehicles:</label>
+                    <input type="range" id="vehicles" name="vehicles" min="1" max="100" value="20" required>
+                    <div class="range-value">Current: <span id="vehiclesValue">20</span></div>
+                </div>
                 
-                <label for="speed">Average Speed (km/h):</label>
-                <input type="number" id="speed" name="speed" min="5" max="120" value="60" required>
+                <div class="input-group">
+                    <label for="speed">Average Speed (km/h):</label>
+                    <input type="range" id="speed" name="speed" min="5" max="120" value="60" required>
+                    <div class="range-value">Current: <span id="speedValue">60</span> km/h</div>
+                </div>
                 
-                <label for="queueDelay">Queue Delay (seconds):</label>
-                <input type="number" id="queueDelay" name="queueDelay" min="0" max="300" value="10" required>
+                <div class="input-group">
+                    <label for="queueDelay">Queue Delay (seconds):</label>
+                    <input type="range" id="queueDelay" name="queueDelay" min="0" max="300" value="10" required>
+                    <div class="range-value">Current: <span id="queueDelayValue">10</span> s</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="roadType">Road Type:</label>
+                    <select id="roadType" name="roadType">
+                        <option value="highway">Highway</option>
+                        <option value="urban">Urban Road</option>
+                        <option value="rural">Rural Road</option>
+                    </select>
+                </div>
                 
                 <button type="submit">Predict & Simulate</button>
             </form>
@@ -94,43 +207,118 @@
         
         <div class="simulation-container">
             <h2>Road Traffic Simulation</h2>
+            
+            <div class="weather-controls">
+                <button class="weather-btn active" data-weather="clear">Clear</button>
+                <button class="weather-btn" data-weather="rain">Rain</button>
+                <button class="weather-btn" data-weather="snow">Snow</button>
+            </div>
+            
+            <div class="time-of-day">
+                <label for="timeOfDay">Time of Day:</label>
+                <input type="range" id="timeOfDay" min="0" max="23" value="12">
+                <span id="timeDisplay">12:00</span>
+            </div>
+            
             <canvas id="simulationCanvas"></canvas>
             <div class="simulation-stats">
                 <div class="stat-item">
                     <h4>Vehicles</h4>
-                    <div id="vehicleCount">0</div>
+                    <div id="vehicleCount" class="stat-value">0</div>
                 </div>
                 <div class="stat-item">
                     <h4>Avg. Speed</h4>
-                    <div id="avgSpeed">0 km/h</div>
+                    <div id="avgSpeed" class="stat-value">0 km/h</div>
                 </div>
                 <div class="stat-item">
                     <h4>Occupancy</h4>
-                    <div id="occupancyRate">0%</div>
+                    <div id="occupancyRate" class="stat-value">0%</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Traffic Flow</h4>
+                    <div id="trafficFlow" class="stat-value">0 veh/h</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Simple prediction model (replace with actual model in production)
-        function predictOccupancy(vehicles, speed, queueDelay) {
-            // This is a simplified model - in reality, you'd use your trained model
-            // Higher vehicles, lower speed, and higher queue delay lead to higher occupancy
-            const normalizedVehicles = vehicles / 100; // Assuming max is 100 vehicles
-            const normalizedSpeed = 1 - (speed / 120); // Inverse relationship with speed
-            const normalizedDelay = queueDelay / 300; // Assuming max delay is 300 seconds
-            
-            const prediction = (normalizedVehicles * 0.5 + normalizedSpeed * 0.3 + normalizedDelay * 0.2) * 100;
-            return Math.min(100, Math.max(0, prediction.toFixed(1)));
-        }
-        
-        // Simulation variables
+        // Constants and Variables
         const canvas = document.getElementById('simulationCanvas');
         const ctx = canvas.getContext('2d');
         let cars = [];
+        let trucks = [];
         let occupancy = 0;
         let simulationRunning = false;
+        let currentWeather = 'clear';
+        let currentTime = 12;
+        let raindrops = [];
+        let snowflakes = [];
+        let roadType = 'highway';
+        
+        // Enhanced prediction model
+        function predictOccupancy(vehicles, speed, queueDelay, roadType) {
+            // Base calculation
+            const normalizedVehicles = vehicles / 100;
+            const normalizedSpeed = 1 - (speed / 120);
+            const normalizedDelay = queueDelay / 300;
+            
+            // Road type factors
+            const roadFactor = {
+                'highway': 0.7,
+                'urban': 1.2,
+                'rural': 0.9
+            };
+            
+            const prediction = (
+                normalizedVehicles * 0.5 + 
+                normalizedSpeed * 0.3 + 
+                normalizedDelay * 0.2
+            ) * 100 * roadFactor[roadType];
+            
+            return Math.min(100, Math.max(0, prediction.toFixed(1)));
+        }
+        
+        // Initialize UI elements
+        function initUI() {
+            const rangeInputs = document.querySelectorAll('input[type="range"]');
+            rangeInputs.forEach(input => {
+                const valueDisplay = document.getElementById(`${input.id}Value`);
+                if (valueDisplay) {
+                    valueDisplay.textContent = input.value;
+                    input.addEventListener('input', () => {
+                        valueDisplay.textContent = input.value;
+                    });
+                }
+            });
+            
+            // Weather buttons
+            const weatherBtns = document.querySelectorAll('.weather-btn');
+            weatherBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    weatherBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentWeather = btn.dataset.weather;
+                    if (currentWeather === 'rain') {
+                        initRain();
+                    } else if (currentWeather === 'snow') {
+                        initSnow();
+                    }
+                });
+            });
+            
+            // Time of day slider
+            const timeSlider = document.getElementById('timeOfDay');
+            const timeDisplay = document.getElementById('timeDisplay');
+            timeSlider.addEventListener('input', () => {
+                currentTime = parseInt(timeSlider.value);
+                const hour = currentTime;
+                const period = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour % 12 || 12;
+                timeDisplay.textContent = `${displayHour}:00 ${period}`;
+                updateSkyColor();
+            });
+        }
         
         // Resize canvas to match display size
         function resizeCanvas() {
@@ -138,89 +326,314 @@
             canvas.height = canvas.clientHeight;
         }
         
-        // Car class for simulation
-        class Car {
-            constructor(lane, speed) {
-                this.x = Math.random() * -100; // Start off-screen
+        // Vehicle classes
+        class Vehicle {
+            constructor(lane, speed, type) {
+                this.x = Math.random() * -200;
                 this.lane = lane;
                 this.baseSpeed = speed;
                 this.currentSpeed = speed;
-                this.width = 30;
-                this.height = 15;
-                this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                this.type = type;
+                this.brakeLights = false;
+                this.color = this.getRandomColor();
             }
             
-            update(occupancyRate) {
-                // Slow down based on occupancy rate
-                this.currentSpeed = this.baseSpeed * (1 - occupancyRate/200);
+            getRandomColor() {
+                const carColors = [
+                    '#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6',
+                    '#34495e', '#1abc9c', '#e67e22', '#ecf0f1', '#95a5a6'
+                ];
+                return carColors[Math.floor(Math.random() * carColors.length)];
+            }
+            
+            update(vehicles, occupancyRate, weather) {
+                // Get vehicle in front
+                let minDistance = Infinity;
+                let frontVehicle = null;
+                
+                vehicles.forEach(v => {
+                    if (v !== this && v.lane === this.lane && v.x > this.x) {
+                        const distance = v.x - (this.x + this.width);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            frontVehicle = v;
+                        }
+                    }
+                });
+                
+                // Basic car following model
+                if (frontVehicle && minDistance < 100) {
+                    const safeDistance = 20 + (this.currentSpeed * 0.5);
+                    if (minDistance < safeDistance) {
+                        this.currentSpeed = Math.max(0, frontVehicle.currentSpeed * 0.9);
+                        this.brakeLights = true;
+                    } else {
+                        this.currentSpeed = Math.min(this.baseSpeed, 
+                            this.currentSpeed + 0.2 * (this.baseSpeed - this.currentSpeed));
+                        this.brakeLights = false;
+                    }
+                } else {
+                    this.currentSpeed = Math.min(this.baseSpeed, 
+                        this.currentSpeed + 0.1 * (this.baseSpeed - this.currentSpeed));
+                    this.brakeLights = false;
+                }
+                
+                // Adjust for weather
+                if (weather === 'rain') {
+                    this.currentSpeed *= 0.9;
+                } else if (weather === 'snow') {
+                    this.currentSpeed *= 0.7;
+                }
+                
+                // Move vehicle
                 this.x += this.currentSpeed * 0.1;
                 
-                // Reset position if car goes off screen
+                // Reset position if vehicle goes off screen
                 if (this.x > canvas.width) {
-                    this.x = Math.random() * -100;
+                    this.x = Math.random() * -200;
+                    this.brakeLights = false;
                 }
+            }
+        }
+        
+        class Car extends Vehicle {
+            constructor(lane, speed) {
+                super(lane, speed, 'car');
+                this.width = 35;
+                this.height = 18;
             }
             
             draw() {
-                const y = 40 + this.lane * 40; // Lane position
+                const y = 50 + this.lane * 50;
+                
+                // Car body
                 ctx.fillStyle = this.color;
                 ctx.fillRect(this.x, y, this.width, this.height);
+                
+                // Windshield
+                ctx.fillStyle = '#aed6f1';
+                ctx.fillRect(this.x + this.width * 0.7, y + 3, this.width * 0.2, this.height - 6);
+                
+                // Brake lights
+                if (this.brakeLights) {
+                    ctx.fillStyle = '#c0392b';
+                    ctx.fillRect(this.x, y + 2, 3, this.height - 4);
+                }
+            }
+        }
+        
+        class Truck extends Vehicle {
+            constructor(lane, speed) {
+                super(lane, speed, 'truck');
+                this.width = 60;
+                this.height = 22;
+            }
+            
+            draw() {
+                const y = 50 + this.lane * 50 - 2;
+                
+                // Truck body
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, y, this.width * 0.4, this.height);
+                ctx.fillRect(this.x + this.width * 0.4, y + 5, this.width * 0.6, this.height - 5);
+                
+                // Windshield
+                ctx.fillStyle = '#aed6f1';
+                ctx.fillRect(this.x + this.width * 0.3, y + 3, this.width * 0.08, this.height - 10);
+                
+                // Brake lights
+                if (this.brakeLights) {
+                    ctx.fillStyle = '#c0392b';
+                    ctx.fillRect(this.x, y + 2, 3, this.height - 4);
+                }
+            }
+        }
+        
+        // Weather effects
+        function initRain() {
+            raindrops = [];
+            for (let i = 0; i < 100; i++) {
+                raindrops.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    length: 10 + Math.random() * 10,
+                    speed: 15 + Math.random() * 5
+                });
+            }
+        }
+        
+        function updateRain() {
+            ctx.strokeStyle = 'rgba(174, 214, 241, 0.8)';
+            ctx.lineWidth = 1;
+            
+            raindrops.forEach(drop => {
+                ctx.beginPath();
+                ctx.moveTo(drop.x, drop.y);
+                ctx.lineTo(drop.x, drop.y + drop.length);
+                ctx.stroke();
+                
+                drop.y += drop.speed;
+                if (drop.y > canvas.height) {
+                    drop.y = 0;
+                    drop.x = Math.random() * canvas.width;
+                }
+            });
+        }
+        
+        function initSnow() {
+            snowflakes = [];
+            for (let i = 0; i < 100; i++) {
+                snowflakes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 1 + Math.random() * 2,
+                    speed: 1 + Math.random() * 3,
+                    wobble: Math.random() * 0.1
+                });
+            }
+        }
+        
+        function updateSnow() {
+            ctx.fillStyle = 'white';
+            
+            snowflakes.forEach(flake => {
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                flake.y += flake.speed;
+                flake.x += Math.sin(flake.y * flake.wobble) * 0.5;
+                
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+            });
+        }
+        
+        // Sky colors based on time of day
+        function getSkyColor() {
+            if (currentTime >= 5 && currentTime < 8) {
+                return 'linear-gradient(to bottom, #ff7e5f, #feb47b)'; // Sunrise
+            } else if (currentTime >= 8 && currentTime < 17) {
+                return '#87CEEB'; // Day
+            } else if (currentTime >= 17 && currentTime < 20) {
+                return 'linear-gradient(to bottom, #2c3e50, #fd746c)'; // Sunset
+            } else {
+                return '#0c2461'; // Night
+            }
+        }
+        
+        function updateSkyColor() {
+            const sky = getSkyColor();
+            if (sky.startsWith('linear')) {
+                canvas.style.background = sky;
+            } else {
+                canvas.style.backgroundColor = sky;
             }
         }
         
         // Initialize simulation
-        function initSimulation(vehicleCount, speed, occupancyRate) {
+        function initSimulation(vehicleCount, speed, occupancyRate, roadType) {
             cars = [];
+            trucks = [];
             occupancy = occupancyRate;
             
-            // Create cars distributed across lanes
+            // Create vehicles distributed across lanes
+            const truckPercentage = roadType === 'highway' ? 0.2 : 0.1;
             for (let i = 0; i < vehicleCount; i++) {
-                const lane = Math.floor(Math.random() * 3); // 3 lanes
-                cars.push(new Car(lane, speed * 0.2)); // Scale down speed for animation
+                const lane = Math.floor(Math.random() * 3);
+                if (Math.random() < truckPercentage) {
+                    trucks.push(new Truck(lane, speed * 0.15));
+                } else {
+                    cars.push(new Car(lane, speed * 0.2));
+                }
             }
             
             if (!simulationRunning) {
                 simulationRunning = true;
                 animateSimulation();
             }
+            
+            // Initialize weather if active
+            if (currentWeather === 'rain') {
+                initRain();
+            } else if (currentWeather === 'snow') {
+                initSnow();
+            }
+            
+            updateSkyColor();
         }
         
         // Animation loop
         function animateSimulation() {
             if (!simulationRunning) return;
             
-            // Clear canvas
+            // Clear canvas with sky color
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw road
             ctx.fillStyle = '#333';
-            ctx.fillRect(0, 20, canvas.width, 120);
+            ctx.fillRect(0, 30, canvas.width, 150);
             
-            // Draw lane markings
+            // Draw road line markings
             ctx.strokeStyle = '#fff';
             ctx.setLineDash([20, 20]);
             for (let i = 1; i < 3; i++) {
                 ctx.beginPath();
-                const y = 20 + i * 40;
+                const y = 30 + i * 50;
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
             }
             ctx.setLineDash([]);
             
-            // Update and draw cars
-            let avgSpeed = 0;
-            cars.forEach(car => {
-                car.update(occupancy);
-                car.draw();
-                avgSpeed += car.currentSpeed;
+            // Shoulder lines (solid)
+            ctx.beginPath();
+            ctx.moveTo(0, 30);
+            ctx.lineTo(canvas.width, 30);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 180);
+            ctx.lineTo(canvas.width, 180);
+            ctx.stroke();
+            
+            // Update all vehicles
+            const allVehicles = [...cars, ...trucks];
+            
+            allVehicles.forEach(vehicle => {
+                vehicle.update(allVehicles, occupancy, currentWeather);
             });
-            avgSpeed = cars.length ? (avgSpeed / cars.length * 5).toFixed(1) : 0;
+            
+            // Draw all vehicles (trucks first, then cars for proper layering)
+            trucks.forEach(truck => truck.draw());
+            cars.forEach(car => car.draw());
+            
+            // Draw weather effects
+            if (currentWeather === 'rain') {
+                updateRain();
+            } else if (currentWeather === 'snow') {
+                updateSnow();
+            }
             
             // Update stats
-            document.getElementById('vehicleCount').textContent = cars.length;
+            const totalVehicles = cars.length + trucks.length;
+            let avgSpeed = 0;
+            
+            allVehicles.forEach(vehicle => {
+                avgSpeed += vehicle.currentSpeed;
+            });
+            
+            avgSpeed = totalVehicles ? (avgSpeed / totalVehicles * 5).toFixed(1) : 0;
+            
+            // Calculate traffic flow (vehicles per hour)
+            const trafficFlow = Math.floor(totalVehicles * avgSpeed / 5);
+            
+            document.getElementById('vehicleCount').textContent = totalVehicles;
             document.getElementById('avgSpeed').textContent = `${avgSpeed} km/h`;
             document.getElementById('occupancyRate').textContent = `${occupancy}%`;
+            document.getElementById('trafficFlow').textContent = `${trafficFlow} veh/h`;
             
             // Continue animation
             requestAnimationFrame(animateSimulation);
@@ -233,24 +646,29 @@
             const vehicles = parseInt(document.getElementById("vehicles").value);
             const speed = parseFloat(document.getElementById("speed").value);
             const queueDelay = parseFloat(document.getElementById("queueDelay").value);
+            roadType = document.getElementById("roadType").value;
 
             // Get prediction
-            const predictedOccupancy = predictOccupancy(vehicles, speed, queueDelay);
+            const predictedOccupancy = predictOccupancy(vehicles, speed, queueDelay, roadType);
             document.getElementById("predictionResult").innerText = `${predictedOccupancy}%`;
             
             // Initialize simulation with form values
-            initSimulation(vehicles, speed, predictedOccupancy);
+            initSimulation(vehicles, speed, predictedOccupancy, roadType);
         });
         
-        // Resize canvas on load and window resize
-        window.addEventListener('load', resizeCanvas);
-        window.addEventListener('resize', resizeCanvas);
+        // Initialize
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            initUI();
+            
+            // Initialize with default values
+            const defaultVehicles = parseInt(document.getElementById("vehicles").value);
+            const defaultSpeed = parseFloat(document.getElementById("speed").value);
+            const defaultOccupancy = predictOccupancy(defaultVehicles, defaultSpeed, 10, roadType);
+            initSimulation(defaultVehicles, defaultSpeed, defaultOccupancy, roadType);
+        });
         
-        // Initialize with default values
-        const defaultVehicles = parseInt(document.getElementById("vehicles").value);
-        const defaultSpeed = parseFloat(document.getElementById("speed").value);
-        const defaultOccupancy = predictOccupancy(defaultVehicles, defaultSpeed, 10);
-        initSimulation(defaultVehicles, defaultSpeed, defaultOccupancy);
+        window.addEventListener('resize', resizeCanvas);
     </script>
 </body>
 </html>
