@@ -3,23 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Occupancy Prediction</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Traffic Occupancy Prediction & Simulation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
         }
-        .container {
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        .form-container {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        .simulation-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        canvas {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         input, button {
             display: block;
@@ -28,6 +49,7 @@
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            box-sizing: border-box;
         }
         button {
             background-color: #28a745;
@@ -38,45 +60,197 @@
         button:hover {
             background-color: #218838;
         }
+        .simulation-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Occupancy Prediction</h2>
-        <form id="predictionForm">
-            <label for="vehicles">Vehicles (Lane 1):</label>
-            <input type="number" id="vehicles" name="vehicles" required>
-            
-            <label for="speed">Speed (Lane 1):</label>
-            <input type="number" id="speed" name="speed" required>
-            
-            <label for="queueDelay">Queue Delay (Lane 1):</label>
-            <input type="number" id="queueDelay" name="queueDelay" required>
-            
-            <button type="submit">Predict</button>
-        </form>
-        <h3>Predicted Occupancy: <span id="predictionResult">-</span></h3>
+    <div class="main-container">
+        <h1>Traffic Simulation</h1>
+        
+        <div class="form-container">
+            <h2>Occupancy Prediction</h2>
+            <form id="predictionForm">
+                <label for="vehicles">Vehicles (Lane 1):</label>
+                <input type="number" id="vehicles" name="vehicles" min="1" max="100" value="20" required>
+                
+                <label for="speed">Average Speed (km/h):</label>
+                <input type="number" id="speed" name="speed" min="5" max="120" value="60" required>
+                
+                <label for="queueDelay">Queue Delay (seconds):</label>
+                <input type="number" id="queueDelay" name="queueDelay" min="0" max="300" value="10" required>
+                
+                <button type="submit">Predict & Simulate</button>
+            </form>
+            <h3>Predicted Occupancy: <span id="predictionResult">-</span></h3>
+        </div>
+        
+        <div class="simulation-container">
+            <h2>Road Traffic Simulation</h2>
+            <canvas id="simulationCanvas"></canvas>
+            <div class="simulation-stats">
+                <div class="stat-item">
+                    <h4>Vehicles</h4>
+                    <div id="vehicleCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Avg. Speed</h4>
+                    <div id="avgSpeed">0 km/h</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Occupancy</h4>
+                    <div id="occupancyRate">0%</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Simple prediction model (replace with actual model in production)
+        function predictOccupancy(vehicles, speed, queueDelay) {
+            // This is a simplified model - in reality, you'd use your trained model
+            // Higher vehicles, lower speed, and higher queue delay lead to higher occupancy
+            const normalizedVehicles = vehicles / 100; // Assuming max is 100 vehicles
+            const normalizedSpeed = 1 - (speed / 120); // Inverse relationship with speed
+            const normalizedDelay = queueDelay / 300; // Assuming max delay is 300 seconds
+            
+            const prediction = (normalizedVehicles * 0.5 + normalizedSpeed * 0.3 + normalizedDelay * 0.2) * 100;
+            return Math.min(100, Math.max(0, prediction.toFixed(1)));
+        }
+        
+        // Simulation variables
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        let cars = [];
+        let occupancy = 0;
+        let simulationRunning = false;
+        
+        // Resize canvas to match display size
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+        
+        // Car class for simulation
+        class Car {
+            constructor(lane, speed) {
+                this.x = Math.random() * -100; // Start off-screen
+                this.lane = lane;
+                this.baseSpeed = speed;
+                this.currentSpeed = speed;
+                this.width = 30;
+                this.height = 15;
+                this.color = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            }
+            
+            update(occupancyRate) {
+                // Slow down based on occupancy rate
+                this.currentSpeed = this.baseSpeed * (1 - occupancyRate/200);
+                this.x += this.currentSpeed * 0.1;
+                
+                // Reset position if car goes off screen
+                if (this.x > canvas.width) {
+                    this.x = Math.random() * -100;
+                }
+            }
+            
+            draw() {
+                const y = 40 + this.lane * 40; // Lane position
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, y, this.width, this.height);
+            }
+        }
+        
+        // Initialize simulation
+        function initSimulation(vehicleCount, speed, occupancyRate) {
+            cars = [];
+            occupancy = occupancyRate;
+            
+            // Create cars distributed across lanes
+            for (let i = 0; i < vehicleCount; i++) {
+                const lane = Math.floor(Math.random() * 3); // 3 lanes
+                cars.push(new Car(lane, speed * 0.2)); // Scale down speed for animation
+            }
+            
+            if (!simulationRunning) {
+                simulationRunning = true;
+                animateSimulation();
+            }
+        }
+        
+        // Animation loop
+        function animateSimulation() {
+            if (!simulationRunning) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw road
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 20, canvas.width, 120);
+            
+            // Draw lane markings
+            ctx.strokeStyle = '#fff';
+            ctx.setLineDash([20, 20]);
+            for (let i = 1; i < 3; i++) {
+                ctx.beginPath();
+                const y = 20 + i * 40;
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            
+            // Update and draw cars
+            let avgSpeed = 0;
+            cars.forEach(car => {
+                car.update(occupancy);
+                car.draw();
+                avgSpeed += car.currentSpeed;
+            });
+            avgSpeed = cars.length ? (avgSpeed / cars.length * 5).toFixed(1) : 0;
+            
+            // Update stats
+            document.getElementById('vehicleCount').textContent = cars.length;
+            document.getElementById('avgSpeed').textContent = `${avgSpeed} km/h`;
+            document.getElementById('occupancyRate').textContent = `${occupancy}%`;
+            
+            // Continue animation
+            requestAnimationFrame(animateSimulation);
+        }
+        
+        // Handle form submission
         document.getElementById("predictionForm").addEventListener("submit", function(event) {
             event.preventDefault();
             
-            const vehicles = document.getElementById("vehicles").value;
-            const speed = document.getElementById("speed").value;
-            const queueDelay = document.getElementById("queueDelay").value;
+            const vehicles = parseInt(document.getElementById("vehicles").value);
+            const speed = parseFloat(document.getElementById("speed").value);
+            const queueDelay = parseFloat(document.getElementById("queueDelay").value);
 
-            fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vehicles, speed, queueDelay })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("predictionResult").innerText = data.prediction;
-            })
-            .catch(error => console.error("Error:", error));
+            // Get prediction
+            const predictedOccupancy = predictOccupancy(vehicles, speed, queueDelay);
+            document.getElementById("predictionResult").innerText = `${predictedOccupancy}%`;
+            
+            // Initialize simulation with form values
+            initSimulation(vehicles, speed, predictedOccupancy);
         });
+        
+        // Resize canvas on load and window resize
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Initialize with default values
+        const defaultVehicles = parseInt(document.getElementById("vehicles").value);
+        const defaultSpeed = parseFloat(document.getElementById("speed").value);
+        const defaultOccupancy = predictOccupancy(defaultVehicles, defaultSpeed, 10);
+        initSimulation(defaultVehicles, defaultSpeed, defaultOccupancy);
     </script>
 </body>
 </html>
